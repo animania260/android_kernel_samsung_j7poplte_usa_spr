@@ -1,9 +1,10 @@
 # android_kernel_samsung_j7poplte_usa_spr
 Kernel Source for Sprint/Boost Samsung Galaxy J7 Perx / SMJ727P
 Sprint/Boost version of the latest J7 2017, Qualcomm chip.
+=================================
 
 I've listed both the Snapdragon 625 and 626 in the specs. The 625 is supposed to be capped at 2.0Ghz, and the 626 (MSM8953Pro) was released specifically with an increase of frequency to 2.2Ghz, so it seems like this is actually using the 626/MSM8953Pro chip. But other than the slight clock increase, it seems exactly the same spec wise, and in the source it is definitely listed as the 625.
-=================================
+
 
 Basic   | Spec Sheet
 -------:|:-------------------------
@@ -21,7 +22,6 @@ Selfie Camera  | 5 MP, 2576 x 1932 pixels, autofocus, LED flash
 Rear Camera  | 8 MP,  4128 x 3096 pixels, autofocus, LED flash
 Wireless | Pronto driver
 NFC | No
-
 
 Boot.img info
 Taken from J727PVPU1AQF5 (latest firmware)
