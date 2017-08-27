@@ -25,10 +25,17 @@ NFC | No
 Boot.img info                                                                                                            
 Taken from J727PVPU1AQF5 (latest firmware)
 -----------------------------------------------------------
-Page size: 2048 (0x00000800)                                                                                     
-Kernel size: 10987026 (0x00a7a612)                                            
-Ramdisk size: 3745179 (0x0039259b)                                      
-Second size: 0 (0x00000000)                                                         
-Board name: SRPPI22A000KU                                                                           
-Command line: 'console=null androidboot.hardware=qcom msm_rtb.filter=0x237 ehci-hcd.park=3 androidboot.bootdevice=7824900.sdhci     lpm_levels.sleep_disabled=1 androidboot.selinux=permissive'                                                                                 
-Base address: (0x81dfff00)                                                                                              
+kernel=kernel
+ramdisk=ramdisk
+dt=dt.img
+page_size=2048
+kernel_size=10987026
+ramdisk_size=3745179
+dtb_size=1488896
+base_addr=0x80000000
+kernel_offset=0x00008000
+ramdisk_offset=0x02000000
+tags_offset=0x01e00000
+cmd_line='console=null androidboot.hardware=qcom msm_rtb.filter=0x237 ehci-hcd.park=3 androidboot.bootdevice=7824900.sdhci lpm_levels.sleep_disabled=1 androidboot.selinux=permissive'
+board="SRPPI22A000KU"
+format=gzip
