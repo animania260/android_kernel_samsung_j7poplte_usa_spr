@@ -13,6 +13,7 @@
 #define pr_fmt(fmt) "MSM-SENSOR-INIT %s:%d " fmt "\n", __func__, __LINE__
 
 /* Header files */
+#include <linux/device.h>
 #include "msm_sensor_init.h"
 #include "msm_sensor_driver.h"
 #include "msm_sensor.h"
@@ -22,6 +23,7 @@
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 
+extern struct kset *devices_kset;
 static struct msm_sensor_init_t *s_init;
 static struct v4l2_file_operations msm_sensor_init_v4l2_subdev_fops;
 struct class *camera_class;
@@ -540,6 +542,7 @@ static DEVICE_ATTR(front_caminfo, S_IRUGO|S_IWUSR|S_IWGRP,
 #endif
 
 #if defined(CONFIG_GET_REAR_MODULE_ID)
+static DEVICE_ATTR(SVC_rear_module, S_IRUGO, back_camera_moduleid_show, NULL);
 static DEVICE_ATTR(rear_moduleid, S_IRUGO, back_camera_moduleid_show, NULL);
 #endif
 
@@ -547,12 +550,47 @@ static DEVICE_ATTR(rear_moduleid, S_IRUGO, back_camera_moduleid_show, NULL);
 static DEVICE_ATTR(front_moduleid, S_IRUGO, front_camera_moduleid_show, NULL);
 #endif
 
+int svc_cheating_prevent_device_file_create(struct kobject **obj)
+{
+	struct kernfs_node *SVC_sd;
+	struct kobject *data;
+	struct kobject *Camera;
+	
+	/* To find SVC kobject */
+	SVC_sd = sysfs_get_dirent(devices_kset->kobj.sd, "svc");
+	if (IS_ERR_OR_NULL(SVC_sd)) {
+		/* try to create SVC kobject */
+		data = kobject_create_and_add("svc", &devices_kset->kobj);
+		if (IS_ERR_OR_NULL(data))
+		        pr_info("Failed to create sys/devices/svc already exist SVC : 0x%p\n", data);
+		else
+			pr_info("Success to create sys/devices/svc SVC : 0x%p\n", data);
+	} else {
+		data = (struct kobject *)SVC_sd->priv;
+		pr_info("Success to find SVC_sd : 0x%p SVC : 0x%p\n", SVC_sd, data);
+	}
+
+	Camera = kobject_create_and_add("Camera", data);
+	if (IS_ERR_OR_NULL(Camera))
+	        pr_info("Failed to create sys/devices/svc/Camera : 0x%p\n", Camera);
+	else
+		pr_info("Success to create sys/devices/svc/Camera : 0x%p\n", Camera);
+
+
+	*obj = Camera;
+	return 0;
+}
+
 static int __init msm_sensor_init_module(void)
 {
 	struct device         *cam_dev_back;
 	struct device         *cam_dev_front;
 
+	struct kobject *SVC = 0;
 	int ret = 0;
+
+	svc_cheating_prevent_device_file_create(&SVC);
+
 	camera_class = class_create(THIS_MODULE, "camera");
 	if (IS_ERR(camera_class))
 	    pr_err("failed to create device cam_dev_rear!\n");
@@ -679,6 +717,13 @@ static int __init msm_sensor_init_module(void)
 	if (device_create_file(cam_dev_back, &dev_attr_rear_moduleid) < 0) {
 		printk("Failed to create device file!(%s)!\n",
 			dev_attr_rear_moduleid.attr.name);
+		ret = -ENODEV;
+		goto device_create_fail;
+	}
+
+	if (sysfs_create_file(SVC, &dev_attr_SVC_rear_module.attr) < 0) {
+		printk("Failed to create device file!(%s)!\n",
+			dev_attr_SVC_rear_module.attr.name);
 		ret = -ENODEV;
 		goto device_create_fail;
 	}

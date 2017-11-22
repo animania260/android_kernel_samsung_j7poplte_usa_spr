@@ -44,7 +44,11 @@
 #define SEC_BAT_CURRENT_EVENT_AFC					0x0001
 #define SEC_BAT_CURRENT_EVENT_LOW_TEMP_SWELLING		0x0010
 #define SEC_BAT_CURRENT_EVENT_HIGH_TEMP_SWELLING	0x0020
+#if defined(CONFIG_ENABLE_100MA_CHARGING_BEFORE_USB_CONFIGURED)
 #define SEC_BAT_CURRENT_EVENT_USB_100MA			0x0040
+#else
+#define SEC_BAT_CURRENT_EVENT_USB_100MA			0x0000
+#endif
 #define SEC_BAT_CURRENT_EVENT_LOW_TEMP 			0x0080
 #define SEC_BAT_CURRENT_EVENT_USB_SUPER			0x0100
 
@@ -74,7 +78,14 @@
 #define SIOP_HV_INPUT_LIMIT_CURRENT                1200
 #define SIOP_HV_CHARGING_LIMIT_CURRENT             1000
 
+#if defined(CONFIG_CCIC_NOTIFIER)
+#define BATT_MISC_EVENT_UNDEFINED_RANGE_TYPE	0x80000000
+#else
 #define BATT_MISC_EVENT_UNDEFINED_RANGE_TYPE	0x00000001
+#endif
+#define BATT_MISC_EVENT_WIRELESS_BACKPACK_TYPE	0x00000002
+#define BATT_MISC_EVENT_TIMEOUT_OPEN_TYPE	0x00000004
+#define BATT_MISC_EVENT_CISD			0x00000010
 
 #if defined(CONFIG_BATTERY_SWELLING)
 enum swelling_mode_state {
@@ -320,6 +331,9 @@ struct sec_battery_info {
 	int timetofull;
 	bool complete_timetofull;
 	struct delayed_work timetofull_work;
+#endif
+#if defined(CONFIG_USB_TYPEC_MANAGER_NOTIFIER)
+	struct delayed_work slowcharging_work;
 #endif
 #if defined(CONFIG_BATTERY_AGE_FORECAST)
 	int batt_cycle;

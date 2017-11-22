@@ -119,6 +119,9 @@ static unsigned int __do_compat_ioctl_nr(unsigned int cmd32)
 static void  __copy_atomic_commit_struct(struct mdp_layer_commit  *commit,
 	struct mdp_layer_commit32 *commit32)
 {
+	unsigned int destSize = sizeof(commit->commit_v1.reserved);
+	unsigned int srcSize = sizeof(commit32->commit_v1.reserved);
+	unsigned int count = (destSize <= srcSize ? destSize : srcSize);
 	commit->version = commit32->version;
 	commit->commit_v1.flags = commit32->commit_v1.flags;
 	commit->commit_v1.input_layer_cnt =
@@ -126,7 +129,7 @@ static void  __copy_atomic_commit_struct(struct mdp_layer_commit  *commit,
 	commit->commit_v1.left_roi = commit32->commit_v1.left_roi;
 	commit->commit_v1.right_roi = commit32->commit_v1.right_roi;
 	memcpy(&commit->commit_v1.reserved, &commit32->commit_v1.reserved,
-		sizeof(commit32->commit_v1.reserved));
+		count);
 }
 
 static struct mdp_input_layer32 *__create_layer_list32(
@@ -935,6 +938,7 @@ static int __to_user_pcc_coeff_v1_7(
 	struct mdp_pcc_data_v1_7_32 pcc_cfg_payload32;
 	struct mdp_pcc_data_v1_7 pcc_cfg_payload;
 
+	memset(&pcc_cfg_payload32, 0, sizeof(pcc_cfg_payload32));
 	if (copy_from_user(&pcc_cfg_payload,
 			   pcc_cfg->cfg_payload,
 			   sizeof(struct mdp_pcc_data_v1_7))) {
@@ -2130,6 +2134,7 @@ static int __to_user_pa_data_v1_7(
 	struct mdp_pa_data_v1_7_32 pa_cfg_payload32;
 	struct mdp_pa_data_v1_7 pa_cfg_payload;
 
+	memset(&pa_cfg_payload32, 0, sizeof(pa_cfg_payload32));
 	if (copy_from_user(&pa_cfg_payload,
 			pa_v2_cfg->cfg_payload,
 			sizeof(pa_cfg_payload))) {
@@ -3482,6 +3487,7 @@ static int __copy_layer_pp_info_igc_params(
 			compat_ptr(pp_info32->igc_cfg.c0_c1_data);
 		pp_info->igc_cfg.c2_data =
 			compat_ptr(pp_info32->igc_cfg.c2_data);
+		kfree(cfg_payload);
 		cfg_payload = NULL;
 		break;
 	}
@@ -3554,6 +3560,7 @@ static int __copy_layer_pp_info_hist_lut_params(
 		pp_info->hist_lut_cfg.len = pp_info32->hist_lut_cfg.len;
 		pp_info->hist_lut_cfg.data =
 				compat_ptr(pp_info32->hist_lut_cfg.data);
+		kfree(cfg_payload);
 		cfg_payload = NULL;
 		break;
 	}
@@ -3643,6 +3650,7 @@ static int __copy_layer_pp_info_pa_v2_params(
 		break;
 	default:
 		pr_debug("version invalid\n");
+		kfree(cfg_payload);
 		cfg_payload = NULL;
 		break;
 	}
@@ -3726,6 +3734,7 @@ static int __copy_layer_pp_info_pcc_params(
 		break;
 	default:
 		pr_debug("version invalid, fallback to legacy\n");
+		kfree(cfg_payload);
 		cfg_payload = NULL;
 		break;
 	}

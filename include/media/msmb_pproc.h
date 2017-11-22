@@ -22,6 +22,7 @@
 #define MSM_CPP_MAX_FRAME_LENGTH 4096
 #define MSM_CPP_MAX_FW_NAME_LEN 32
 #define MAX_FREQ_TBL 10
+#define MSM_OUTPUT_BUF_CNT 8
 
 enum msm_cpp_frame_type {
 	MSM_CPP_OFFLINE_FRAME,

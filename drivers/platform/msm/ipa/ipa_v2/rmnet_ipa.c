@@ -1419,6 +1419,9 @@ static int ipa_wwan_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 			memcpy(mux_channel[rmnet_index].vchannel_name,
 				extend_ioctl_data.u.rmnet_mux_val.vchannel_name,
 				sizeof(mux_channel[rmnet_index].vchannel_name));
+			mux_channel[rmnet_index].vchannel_name[
+				IFNAMSIZ - 1] = '\0';
+
 			IPAWANDBG("cashe device[%s:%d] in IPA_wan[%d]\n",
 				mux_channel[rmnet_index].vchannel_name,
 				mux_channel[rmnet_index].mux_id,
@@ -2500,13 +2503,31 @@ int rmnet_ipa_set_data_quota(struct wan_ioctl_set_data_quota *data)
  *
  * Return codes:
  * 0: Success
- * -EFAULT: Invalid interface name provided
+ * -EFAULT: Invalid src/dst pipes provided
  * other: See ipa_qmi_set_data_quota
  */
 int rmnet_ipa_set_tether_client_pipe(
 	struct wan_ioctl_set_tether_client_pipe *data)
 {
 	int number, i;
+
+	/* error checking if ul_src_pipe_len valid or not*/
+	if (data->ul_src_pipe_len > QMI_IPA_MAX_PIPES_V01 ||
+		data->ul_src_pipe_len < 0) {
+		IPAWANERR("UL src pipes %d exceeding max %d\n",
+				data->ul_src_pipe_len,
+				QMI_IPA_MAX_PIPES_V01);
+		return -EFAULT;
+	}
+
+	/* error checking if dl_dst_pipe_len valid or not*/
+	if (data->dl_dst_pipe_len > QMI_IPA_MAX_PIPES_V01 ||
+		data->dl_dst_pipe_len < 0) {
+		IPAWANERR("DL dst pipes %d exceeding max %d\n",
+				data->dl_dst_pipe_len,
+				QMI_IPA_MAX_PIPES_V01);
+		return -EFAULT;
+	}
 
 	IPAWANDBG("client %d, UL %d, DL %d, reset %d\n",
 	data->ipa_client,

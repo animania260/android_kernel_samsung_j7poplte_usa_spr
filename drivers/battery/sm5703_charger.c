@@ -750,7 +750,7 @@ static int sec_chg_get_property(struct power_supply *psy,
 		union power_supply_propval *val)
 {
 
-	int chg_curr, aicr, vbus_status;
+	int vbus_status;
 	struct sm5703_charger_data *charger =
 		container_of(psy, struct sm5703_charger_data, psy_chg);
 
@@ -770,19 +770,19 @@ static int sec_chg_get_property(struct power_supply *psy,
 		case POWER_SUPPLY_PROP_HEALTH:
 			val->intval = sm5703_get_charging_health(charger);
 			break;
+		/* get input current which was set */
 		case POWER_SUPPLY_PROP_CURRENT_MAX:
-			sm5703_test_read(charger->i2c);
+			val->intval = charger->input_current;
+			break;
+		/* get input current which was read */
+		case POWER_SUPPLY_PROP_CURRENT_AVG:
 			val->intval = sm5703_get_input_current_limit(charger);
 			break;
-		case POWER_SUPPLY_PROP_CURRENT_AVG:
+		/* get charge current which was set */
 		case POWER_SUPPLY_PROP_CURRENT_NOW:
-			if (charger->charging_current) {
-				aicr = sm5703_get_input_current_limit(charger);
-				chg_curr = sm5703_get_fast_charging_current(charger);
-				val->intval = MINVAL(aicr, chg_curr);
-			} else
-				val->intval = 0;
+			val->intval = charger->charging_current;
 			break;
+		/* get charge current which was read */
 		case POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT:
 			val->intval = sm5703_get_fast_charging_current(charger);
 			break;
@@ -862,15 +862,12 @@ static int sec_chg_set_property(struct power_supply *psy,
 				sm5703_charger_vbus_control(charger, 1);
 			}
 			break;
+		/* set input current */
 		case POWER_SUPPLY_PROP_CURRENT_MAX:
-			{
-				int input_current = val->intval;
-				if (charger->input_current < input_current) {
-					input_current = charger->input_current;
-				}
-				sm5703_set_input_current_limit(charger, input_current);
-			}
+			charger->input_current = val->intval;
+			sm5703_set_input_current_limit(charger, charger->input_current);
 			break;
+		/* set charge current */
 		case POWER_SUPPLY_PROP_CURRENT_AVG:
 		case POWER_SUPPLY_PROP_CURRENT_NOW:
 			charger->charging_current = val->intval;

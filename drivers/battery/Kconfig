@@ -601,3 +601,8 @@ config FEATURE_SOFT_START_CHARGING
 	help
 	  Say Y to enable CONFIG_FEATURE_SOFT_START_CHARGING
 
+config ENABLE_100MA_CHARGING_BEFORE_USB_CONFIGURED
+	bool "enable 100mA before usb configured"
+	default n
+	help
+	  Say Y to enable 100mA before usb configured
