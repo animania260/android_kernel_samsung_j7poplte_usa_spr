@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -1893,20 +1893,16 @@ validate_exit:
 	mutex_lock(&mdp5_data->list_lock);
 	list_for_each_entry_safe(pipe, tmp, &mdp5_data->pipes_used, list) {
 		if (IS_ERR_VALUE(ret)) {
-			if (((pipe->ndx & rec_release_ndx[0]) &&
-					(pipe->multirect.num == 0)) ||
-				((pipe->ndx & rec_release_ndx[1]) &&
-					(pipe->multirect.num == 1))) {
+			if ((pipe->ndx & rec_release_ndx[0]) ||
+			    (pipe->ndx & rec_release_ndx[1])) {
 				mdss_mdp_smp_unreserve(pipe);
 				pipe->params_changed = 0;
 				pipe->dirty = true;
 				if (!list_empty(&pipe->list))
 					list_del_init(&pipe->list);
 				mdss_mdp_pipe_destroy(pipe);
-			} else if (((pipe->ndx & rec_destroy_ndx[0]) &&
-						(pipe->multirect.num == 0)) ||
-					   ((pipe->ndx & rec_destroy_ndx[1]) &&
-						(pipe->multirect.num == 1))) {
+			} else if ((pipe->ndx & rec_destroy_ndx[0]) ||
+				   (pipe->ndx & rec_destroy_ndx[1])) {
 				/*
 				 * cleanup/destroy list pipes should move back
 				 * to destroy list. Next/current kickoff cycle
@@ -2111,12 +2107,6 @@ int mdss_mdp_layer_pre_commit_wfd(struct msm_fb_data_type *mfd,
 		wfd = mdp5_data->wfd;
 		output_layer = commit->output_layer;
 
-		if (output_layer->buffer.plane_count > MAX_PLANES) {
-       		  pr_err("Output buffer plane_count exceeds MAX_PLANES limit:%d\n",
-              		 output_layer->buffer.plane_count);
-         	  return -EINVAL;
-      		}
-
 		data = mdss_mdp_wfd_add_data(wfd, output_layer);
 		if (IS_ERR_OR_NULL(data))
 			return PTR_ERR(data);
@@ -2147,14 +2137,6 @@ int mdss_mdp_layer_pre_commit_wfd(struct msm_fb_data_type *mfd,
 		sync_pt_data = &mfd->mdp_sync_pt_data;
 		mutex_lock(&sync_pt_data->sync_mutex);
 		count = sync_pt_data->acq_fen_cnt;
-
-		if (count >= MDP_MAX_FENCE_FD) {
-			pr_err("Reached maximum possible value for fence count\n");
-			mutex_unlock(&sync_pt_data->sync_mutex);
-			rc = -EINVAL;
-			goto input_layer_err;
-		}
-
 		sync_pt_data->acq_fen[count] = fence;
 		sync_pt_data->acq_fen_cnt++;
 		mutex_unlock(&sync_pt_data->sync_mutex);
